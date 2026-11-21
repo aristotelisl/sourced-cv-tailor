@@ -10,8 +10,8 @@ from backend.paths import ROOT
 
 load_dotenv(ROOT / ".env")
 
-Task = Literal["analyse", "bullet", "answer", "tailor", "extras"]
-TASKS: tuple[Task, ...] = ("analyse", "bullet", "answer", "tailor", "extras")
+Task = Literal["analyse", "bullet", "answer", "tailor", "extras", "import"]
+TASKS: tuple[Task, ...] = ("analyse", "bullet", "answer", "tailor", "extras", "import")
 
 # "anthropic": the Claude API. "openai": any OpenAI-compatible chat completions API
 # (OpenAI, Gemini, OpenRouter, Groq, or a local model through Ollama or LM Studio).
@@ -25,6 +25,7 @@ DEFAULT_MODELS: dict[str, str] = {
     "answer": "claude-haiku-5-5",
     "tailor": "claude-sonnet-5-5",
     "extras": "claude-sonnet-5-5",
+    "import": "claude-sonnet-5-5",  # reading an uploaded CV into a first profile
 }
 
 

@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import {
-  ApiError, api, type BankItem, type Extra, type ExtraKind, type JobAnalysis, type TailorResult, type TailoredCV,
+  ApiError, api, type BankItem, type Extra, type ExtraKind, type JobAnalysis, type ProfileStatus, type TailorResult,
+  type TailoredCV,
 } from '@/api/client'
 import * as edits from '@/lib/cv'
 
@@ -19,6 +20,9 @@ interface State {
   bank: Record<string, BankItem[]> | null // profile bullets/facts by entry id, for swapping (not persisted)
   busy: Busy
   error: { message: string; problems: string[] } | null
+  profile: ProfileStatus | null // whose profile.yaml the app is using (not persisted: asked on load)
+  sampleChosen: boolean         // "explore with the sample profile" was picked, so don't show setup first
+
 
   setJobText: (text: string) => void
   analyse: () => Promise<void>
@@ -32,6 +36,10 @@ interface State {
   saveExtra: (id: number, text: string, subject: string | null) => Promise<void>
   deleteExtra: (id: number) => Promise<void>
   loadBank: (force?: boolean) => Promise<void>
+  loadProfileStatus: () => Promise<void>
+  chooseSample: () => Promise<void>
+  /** A new profile.yaml was saved: work tailored from the old one no longer matches it. */
+  profileReplaced: (status: ProfileStatus) => void
   reset: () => void
   clearError: () => void
   editCv: (fn: (cv: TailoredCV) => TailoredCV) => void
@@ -85,6 +93,8 @@ export const useStore = create<State>()(persist((set, get) => {
 
   return {
     ...empty,
+    profile: null,
+    sampleChosen: false,
 
     setJobText: jobText => set({ jobText }),
 
@@ -175,6 +185,24 @@ export const useStore = create<State>()(persist((set, get) => {
       }
     },
 
+    loadProfileStatus: async () => {
+      try {
+        set({ profile: await api.profileStatus() })
+      } catch (e) {
+        set({ error: toError(e) })
+      }
+    },
+
+    chooseSample: async () => {
+      try {
+        set({ profile: await api.useExampleProfile(), sampleChosen: true })
+      } catch (e) {
+        set({ error: toError(e) })
+      }
+    },
+
+    profileReplaced: status => set({ ...empty, profile: status, sampleChosen: false }),
+
     reset: () => set({ ...empty, bank: get().bank }),
     clearError: () => set({ error: null }),
     editCv: fn => {
@@ -185,8 +213,8 @@ export const useStore = create<State>()(persist((set, get) => {
 }, {
   name: 'cv-tailor',
   // Tailoring costs a minute and a few cents: keep the work across reloads, but not transient state.
-  partialize: ({ applicationId, jobText, analysis, result, cv, edited, extras }) =>
-    ({ applicationId, jobText, analysis, result, cv, edited, extras }),
+  partialize: ({ applicationId, jobText, analysis, result, cv, edited, extras, sampleChosen }) =>
+    ({ applicationId, jobText, analysis, result, cv, edited, extras, sampleChosen }),
 }))
 
 export { edits }

@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+    "/api/profile/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Profile Status
+         * @description Whether there's a profile of your own yet (the app shows the setup page until there is).
+         */
+        get: operations["profile_status_api_profile_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/use-example": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Use Example Profile
+         * @description Explore with the fictional sample profile (copied to profile.yaml if there's none).
+         */
+        post: operations["use_example_profile_api_profile_use_example_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Cv
+         * @description Read an uploaded CV into a proposed profile.yaml. Nothing is saved.
+         */
+        post: operations["import_cv_api_profile_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Profile
+         * @description Save a whole profile.yaml (from setup). A profile of your own is backed up first.
+         */
+        post: operations["save_profile_api_profile_save_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile": {
         parameters: {
             query?: never;
@@ -962,6 +1042,29 @@ export interface components {
              */
             quote: string;
         };
+        /**
+         * ProfileImportRequest
+         * @description A CV file (base64) or pasted text: exactly one of them.
+         */
+        ProfileImportRequest: {
+            /** Filename */
+            filename?: string | null;
+            /** Content Base64 */
+            content_base64?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** ProfileImportResult */
+        ProfileImportResult: {
+            /** Yaml */
+            yaml: string;
+            /** Warnings */
+            warnings: string[];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+        };
         /** ProfileProposal */
         ProfileProposal: {
             /** Edits */
@@ -978,6 +1081,27 @@ export interface components {
              * @description Hash of profile.yaml the diff was made against
              */
             base: string;
+        };
+        /** ProfileSaveRequest */
+        ProfileSaveRequest: {
+            /** Yaml */
+            yaml: string;
+        };
+        /** ProfileSaveResult */
+        ProfileSaveResult: {
+            status: components["schemas"]["ProfileStatus"];
+            /** Backup */
+            backup: string | null;
+        };
+        /** ProfileStatus */
+        ProfileStatus: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "missing" | "example" | "own";
+            /** Name */
+            name: string | null;
         };
         /** ProfileSummary */
         ProfileSummary: {
@@ -1141,6 +1265,112 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    profile_status_api_profile_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileStatus"];
+                };
+            };
+        };
+    };
+    use_example_profile_api_profile_use_example_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileStatus"];
+                };
+            };
+        };
+    };
+    import_cv_api_profile_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_profile_api_profile_save_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSaveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSaveResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     profile_summary_api_profile_get: {
         parameters: {
             query?: never;

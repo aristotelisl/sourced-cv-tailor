@@ -26,11 +26,7 @@ if (-not (Test-Path (Join-Path $root '.env'))) {
     Write-Host 'No .env found. Copy .env.example to .env and add your ANTHROPIC_API_KEY.' -ForegroundColor Red
     exit 1
 }
-$profileYaml = Join-Path $root 'data\profile.yaml'
-if (-not (Test-Path $profileYaml)) {
-    Copy-Item (Join-Path $root 'examples\profile.example.yaml') $profileYaml
-    Write-Host 'Created data\profile.yaml from the fictional example. Replace it with your own facts.' -ForegroundColor Yellow
-}
+# No data\profile.yaml yet: the app opens on profile setup (upload your CV, or explore with the sample).
 if (-not (Test-Path (Join-Path $frontend 'node_modules'))) {
     Write-Host 'Installing frontend packages (first run)...' -ForegroundColor Yellow
     Push-Location $frontend; npm install; Pop-Location

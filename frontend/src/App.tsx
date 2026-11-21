@@ -5,8 +5,11 @@ import { GapReport } from '@/components/GapReport'
 import { HeaderExtras } from '@/components/HeaderExtras'
 import { JobInput } from '@/components/JobInput'
 import { Preview } from '@/components/Preview'
+import { ProfileSetup } from '@/components/ProfileSetup'
 import { Tracker } from '@/components/Tracker'
-import { navigate, type Route, useRoute } from '@/lib/route'
+import { useEffect } from 'react'
+
+import { href, navigate, type Route, useRoute } from '@/lib/route'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -31,7 +34,7 @@ function ErrorAlert() {
 
 function NavLink({ to, current, children }: { to: Route; current: Route; children: string }) {
   return (
-    <a href={to === 'tracker' ? '#/tracker' : '#/'}
+    <a href={href(to)}
        className={cn('rounded-md px-2 py-1 text-sm', to === current ? 'bg-muted font-medium' : 'text-muted-foreground')}>
       {children}
     </a>
@@ -39,9 +42,15 @@ function NavLink({ to, current, children }: { to: Route; current: Route; childre
 }
 
 export default function App() {
-  const { analysis, cv, reset, busy } = useStore()
+  const { analysis, cv, reset, busy, profile, sampleChosen, error, loadProfileStatus } = useStore()
   const route = useRoute()
-  const splitView = route !== 'tracker' && analysis !== null
+  useEffect(() => { loadProfileStatus() }, [loadProfileStatus])
+
+  // New users set up their profile first, unless they chose to explore with the sample one.
+  const needsSetup = profile !== null &&
+    (profile.state === 'missing' || (profile.state === 'example' && !sampleChosen))
+  const page: Route | 'loading' = profile === null && !error ? 'loading' : needsSetup ? 'profile' : route
+  const splitView = page === 'tailor' && analysis !== null
 
   const newJob = () => {
     // Saved work is safe in the tracker; only unsaved edits would be lost.
@@ -57,14 +66,19 @@ export default function App() {
         <h1 className="mr-4 text-base font-semibold">CV Tailor</h1>
         <NavLink to="tailor" current={route}>Tailor</NavLink>
         <NavLink to="tracker" current={route}>Tracker</NavLink>
-        {(analysis || route === 'tracker') && (
+        <NavLink to="profile" current={route}>Profile</NavLink>
+        {(analysis || route === 'tracker') && page !== 'profile' && (
           <Button size="sm" variant="outline" className="ml-auto" onClick={newJob} disabled={busy !== null}>
             New application
           </Button>
         )}
       </header>
 
-      {route === 'tracker' ? (
+      {page === 'loading' ? null : page === 'profile' ? (
+        <main className="mx-auto max-w-3xl space-y-4 p-6">
+          <ProfileSetup />
+        </main>
+      ) : page === 'tracker' ? (
         <main className="mx-auto max-w-6xl space-y-4 p-6">
           <ErrorAlert />
           <Tracker />
@@ -72,6 +86,15 @@ export default function App() {
       ) : !analysis ? (
         <main className="mx-auto max-w-3xl space-y-4 p-6">
           <ErrorAlert />
+          {profile?.state === 'example' && (
+            <Alert>
+              <AlertTitle>You're exploring with the sample profile</AlertTitle>
+              <AlertDescription>
+                CVs will use {profile.name}'s experience (a fictional person).{' '}
+                <a href={href('profile')} className="font-medium underline">Set up your own profile</a> from your CV.
+              </AlertDescription>
+            </Alert>
+          )}
           <JobInput />
         </main>
       ) : (

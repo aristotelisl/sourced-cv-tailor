@@ -136,6 +136,8 @@ Other rules:
 6. **Extras**: cover letter, about-me blurb, message drafts.
 7. **Tracker**: table of applications with status, date, and links to CV versions.
 8. **Profile editor**: edit `profile.yaml` in a form or raw YAML, with validation.
+9. **Profile setup** (first run, and the Profile page): upload a CV (PDF, DOCX, text) or paste it →
+   proposed `profile.yaml` with warnings → edit → save. Or explore with the sample profile.
 
 ---
 
@@ -150,6 +152,11 @@ Other rules:
 5. **M5: Tracker and versions** (SQLite).
 6. **M6: Extras.** Cover letter, about-me blurb, messages (same no-invention rule).
 7. **M7: Polish.** Regenerate a single bullet, bullet-bank swap, answering questions updates the profile.
+8. **M8: Profile setup.** New users start by uploading their CV: `POST /api/profile/import` reads it
+   into a proposed `profile.yaml` (nothing saved); `POST /api/profile/save` validates and saves it
+   (backing up a profile of your own). The no-invention rule applies on the way in: every value is
+   checked against the CV text; bullets that don't match are kept as `verified: false`, other
+   values are dropped. Or explore with the sample profile (`POST /api/profile/use-example`).
 
 ## 8. Acceptance tests
 
@@ -158,3 +165,4 @@ Other rules:
 - A job with salary in INR gets a "probably another country" flag.
 - A UK job gets the UK header suggestion configured in `preferences`; a job elsewhere doesn't.
 - Any bullet whose `source` isn't in the profile is rejected before rendering.
+- Importing a CV never adds a number, technology, skill or link that isn't in the CV text.

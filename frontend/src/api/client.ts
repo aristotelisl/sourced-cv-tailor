@@ -25,6 +25,10 @@ export type BulletRequest = S['BulletRequest']
 export type BulletOption = S['BulletOption']
 export type BankItem = S['BankItem']
 export type ProfileProposal = S['ProfileProposal']
+export type ProfileStatus = S['ProfileStatus']
+export type ProfileImportRequest = S['ProfileImportRequest']
+export type ProfileImportResult = S['ProfileImportResult']
+export type ProfileSaveResult = S['ProfileSaveResult']
 
 export class ApiError extends Error {
   readonly problems: string[]
@@ -76,6 +80,13 @@ export const api = {
   pdf: async (cv: TailoredCV): Promise<Blob> => (await post('/api/render/pdf', cv)).blob(),
   rewriteBullet: async (req: BulletRequest): Promise<BulletOption[]> =>
     (await (await post('/api/tailor/bullet', req)).json()).options,
+
+  // Profile setup (first run): read a CV into a proposed profile.yaml, or explore with the sample
+  profileStatus: async (): Promise<ProfileStatus> => (await request('/api/profile/status')).json(),
+  useExampleProfile: async (): Promise<ProfileStatus> => (await post('/api/profile/use-example', {})).json(),
+  importCv: async (req: ProfileImportRequest): Promise<ProfileImportResult> =>
+    (await post('/api/profile/import', req)).json(),
+  saveProfile: async (yaml: string): Promise<ProfileSaveResult> => (await post('/api/profile/save', { yaml })).json(),
 
   // Profile: the bullet bank, and answering gap-report questions into profile.yaml
   bank: async (): Promise<Record<string, BankItem[]>> => (await request('/api/profile/bank')).json(),

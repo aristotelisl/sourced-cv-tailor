@@ -7,6 +7,7 @@ node_modules/
 .vscode/
 # Your own profile and example CV (start from examples/)
 data/profile.yaml
+data/profile.backup-*.yaml
 data/example.tailored.json
 # Claude Code: your personal permissions/settings for this folder
 .claude/settings.local.json

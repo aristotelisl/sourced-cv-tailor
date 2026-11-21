@@ -13,6 +13,9 @@ claim those entries don't support.
 
 ## What it does
 
+- **Start from your CV**: upload your current CV (PDF, Word or text) and it becomes your profile.
+  It's copied as written: code checks every bullet, date, skill and link against the CV text,
+  and anything it can't find is left out or marked unverified. You check the result before it's saved.
 - **Analyse a job**: paste a listing and get must-haves, nice-to-haves, stack, seniority, salary,
   location and right-to-work rules as structured data.
 - **Tailor the CV**: choose section order, bullets and skills for the role; every bullet's
@@ -42,7 +45,6 @@ python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt     # macOS/Linux: .venv/bin/pip
 .venv/Scripts/python -m playwright install chromium
 cp .env.example .env                              # then choose a provider (see below)
-cp examples/profile.example.yaml data/profile.yaml
 cd frontend
 npm install
 cd ..
@@ -54,12 +56,15 @@ Run it:
 - **Anywhere**: `uvicorn backend.main:app --reload` and, in a second terminal,
   `npm run dev` inside `frontend/`, then open http://localhost:5173.
 
-The example profile belongs to Jordan Avery, a fictional developer, so you can try the whole flow
-before writing your own.
+On first run the app asks for your CV and turns it into your profile. Or choose **Explore with the
+sample profile** to try the whole flow as Jordan Avery, a fictional developer, and set up your own
+later from the **Profile** page.
 
 ## Your profile
 
-`data/profile.yaml` is git-ignored. Start from `examples/profile.example.yaml`:
+`data/profile.yaml` is git-ignored. The app creates it from your CV on first run (importing again
+later keeps a backup of the old one as `data/profile.backup-<date>.yaml`). You can also write it by
+hand, starting from `examples/profile.example.yaml`. What it holds:
 
 - `person`: name, contact details, optional `header_extras` (e.g. a right-to-work line) you can
   switch on per job.

@@ -33,19 +33,27 @@ def seed_application(cv: dict | None = None, label: str = "Tailored") -> dict:
 
 
 @contextmanager
-def browser_page(width: int = 1500, height: int = 1000):
-    """A Chromium page; on exit, fails if the app logged any error."""
+def browser_page(width: int = 1500, height: int = 1000, sample_chosen: bool = True, expected_errors: int = 0):
+    """A Chromium page; on exit, fails if the app logged any error.
+
+    The e2e servers use the sample profile, so by default the page starts as if "Explore with the
+    sample profile" was already clicked (otherwise the app opens on profile setup).
+    `expected_errors`: failed requests the script causes on purpose (the browser logs each one).
+    """
     OUT.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page: Page = browser.new_page(viewport={"width": width, "height": height}, accept_downloads=True)
+        if sample_chosen:
+            page.add_init_script("if (!localStorage.getItem('cv-tailor')) localStorage.setItem('cv-tailor', "
+                                 "JSON.stringify({state: {sampleChosen: true}, version: 0}))")
         errors: list[str] = []
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
         yield page
         browser.close()
-    assert not errors, f"browser errors: {errors}"
-    print("browser errors: none")
+    assert len(errors) == expected_errors, f"browser errors: {errors}"
+    print(f"browser errors: {'none' if not errors else f'{len(errors)}, as expected'}")
 
 
 def open_in_editor(page: Page) -> None:

@@ -1,13 +1,19 @@
-"""Profile endpoints: a summary for the UI, the bullet bank, and answering questions into profile.yaml."""
+"""Profile endpoints: first-run setup, a summary for the UI, the bullet bank, and answering questions into profile.yaml."""
 from fastapi import APIRouter, HTTPException
 
 from backend.llm import LLMError, LLMNotConfigured
 from backend.llm.answer import EditsRejected
 from backend.models.base import StrictModel
 from backend.models.profile_edit import ProfileAnswerRequest, ProfileApplied, ProfileApplyRequest, ProfileProposal
+from backend.models.profile_import import (
+    ProfileImportRequest, ProfileImportResult, ProfileSaveRequest, ProfileSaveResult, ProfileStatus,
+)
 from backend.profile import load_profile, profile_records
 from backend.profile_edit import service
 from backend.profile_edit.service import EditsInvalid, ProfileChanged
+from backend.profile_import import service as setup
+from backend.profile_import.service import InvalidProfile
+from backend.profile_import.text import UnreadableFile
 
 router = APIRouter(prefix="/api", tags=["profile"])
 
@@ -22,6 +28,40 @@ class BankItem(StrictModel):
     id: str
     text: str
     verified: bool
+
+
+@router.get("/profile/status")
+def profile_status() -> ProfileStatus:
+    """Whether there's a profile of your own yet (the app shows the setup page until there is)."""
+    return setup.status()
+
+
+@router.post("/profile/use-example")
+def use_example_profile() -> ProfileStatus:
+    """Explore with the fictional sample profile (copied to profile.yaml if there's none)."""
+    return setup.use_example()
+
+
+@router.post("/profile/import")
+def import_cv(req: ProfileImportRequest) -> ProfileImportResult:
+    """Read an uploaded CV into a proposed profile.yaml. Nothing is saved."""
+    try:
+        return setup.import_cv(req)
+    except UnreadableFile as e:
+        raise HTTPException(422, {"error": "unreadable_file", "message": str(e)}) from e
+    except LLMNotConfigured as e:
+        raise HTTPException(503, {"error": "llm_not_configured", "message": str(e)}) from e
+    except LLMError as e:
+        raise HTTPException(502, {"error": "llm_failed", "message": str(e)}) from e
+
+
+@router.post("/profile/save")
+def save_profile(req: ProfileSaveRequest) -> ProfileSaveResult:
+    """Save a whole profile.yaml (from setup). A profile of your own is backed up first."""
+    try:
+        return setup.save(req)
+    except InvalidProfile as e:
+        raise HTTPException(422, {"error": "invalid_profile", "message": str(e), "problems": e.problems}) from e
 
 
 @router.get("/profile")
