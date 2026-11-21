@@ -1,0 +1,109 @@
+{
+  "_comment": "Golden example for the fictional profile in examples/profile.example.yaml: a CV tailored for a frontend role, where every bullet cites its profile source and nothing goes beyond the profile. The LLM's tailoring step outputs this shape.",
+  "job": {
+    "company": "Brightwave",
+    "title": "Senior Software Engineer, Frontend",
+    "location": "Porto, Portugal (remote possible)"
+  },
+  "filename": "CV_Jordan_Avery_Frontend",
+  "header_extras": [],
+  "layout": {},
+  "sections": [
+    {
+      "title": "Employment",
+      "entries": [
+        {
+          "source": "lumora",
+          "left": "Software Developer",
+          "middle_url": "https://lumora.example.com", "middle_link_text": "Lumora", "middle_suffix": " - Porto, Portugal",
+          "right": "10/2024 - 09/2025",
+          "bullets": [
+            {"source": "lumora_flow_builder", "text": "Built a no-code flow builder in React and Vite, letting support teams design chatbot conversations by connecting blocks on an interactive canvas"},
+            {"source": "lumora_website", "text": "Built and launched the company website and customer portal in Next.js, responsive and fast across devices"},
+            {"source": "lumora_api_routes", "text": "Built Next.js API routes connecting the frontend to backend services and shaping the data each view needed"},
+            {"source": "lumora_agentic_rag+lumora_integrations", "text": "Designed agentic AI workflows and RAG pipelines (LlamaIndex) for Lumora’s customer-support assistant, connecting it to the CRM, ticketing system and live order data"},
+            {"source": "lumora_aspnet+lumora_microservices", "text": "Developed APIs in ASP.NET and modular Python microservices supporting core features of the assistant"}
+          ]
+        },
+        {
+          "source": "kestrel",
+          "left": "Software Engineering Intern",
+          "middle_url": "https://kestrel.example.com", "middle_link_text": "Kestrel Software", "middle_suffix": " - Lisbon, Portugal",
+          "right": "07/2023 - 09/2023",
+          "bullets": [
+            {"source": "kestrel_visualiser", "text": "Developed a dependency visualiser web application helping engineers navigate the relationships between hundreds of packages in a large monorepo"},
+            {"source": "kestrel_dag+kestrel_visualiser", "text": "Implemented interactive directed-acyclic-graph visualisations, search and syntax highlighting to make a large package hierarchy explorable"}
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Education",
+      "entries": [
+        {
+          "source": "northgate_msc",
+          "left": "MSc Computer Science", "middle": "Northgate University", "right": "10/2025 - 09/2026",
+          "bullets": [
+            {"source": "northgate_msc", "text": "Dissertation: AI-Assisted Generation of Editable Process Diagrams from Written Requirements"},
+            {"source": "northgate_msc", "text": "Relevant Modules: Software Engineering, Software Development, AI and Machine Learning"}
+          ]
+        },
+        {
+          "source": "fernhill_bsc",
+          "left": "BSc (Hons) Computer Science", "middle": "Fernhill University", "right": "10/2021 - 06/2024",
+          "bullets": [
+            {"source": "fernhill_bsc", "text": "Relevant Modules: Cloud Application Development, Machine Learning Technologies, Intelligent Systems"}
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Selected Project",
+      "entries": [
+        {
+          "source": "flowboard",
+          "left": "FlowBoard (MSc Dissertation)",
+          "middle_prefix": "Industry project with ", "middle_url": "https://orbitale.example.com", "middle_link_text": "Orbitale",
+          "right": "2026",
+          "bullets": [
+            {"source": "fb_overview+fb_agents+fb_hitl", "text": "Built a full-stack web app that turns written requirements documents into editable process diagrams through a pipeline of LLM agents, with human-in-the-loop review at each step or a fully automated mode", "tech": "React 19, TypeScript, Vite, Tailwind CSS, Zustand, Flask, OpenAI API, Docker Compose"},
+            {"source": "fb_editor+fb_layout", "text": "Built an interactive diagram editor with React Flow and d3-force auto-layout: drag-to-connect links, click-to-edit steps, and pinned steps so edits never reshuffle the layout"},
+            {"source": "fb_store+fb_cycles", "text": "Designed a single Zustand store as the source of truth, with cascading renames and deletes, client-side diagram derivation and DFS cycle detection that highlights loops"},
+            {"source": "fb_validation+fb_exports", "text": "Combined deterministic NetworkX graph validation with LLM review, and added PNG and standalone HTML exports plus validated JSON save/load"}
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Awards",
+      "entries": [
+        {
+          "source": "hackathon",
+          "left": "Northgate Hackathon", "left_url": "https://hackathon.example.com",
+          "middle": "Northgate University", "right": "05/2026",
+          "bullets": [
+            {"source": "hackathon", "text": "1st place and £1,000 prize for FloodWatch, a team app that sends neighbourhood flood alerts from river-level data"}
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Skills",
+      "entries": [],
+      "skills": [
+        {"label": "Frontend", "items": ["React", "TypeScript", "JavaScript", "Next.js", "Vite", "Tailwind CSS", "Zustand", "React Flow", "D3"]},
+        {"label": "Backend & APIs", "items": ["Node.js", "Express.js", "Python (Flask, FastAPI)", "C# (ASP.NET)"]},
+        {"label": "Data & Tools", "items": ["PostgreSQL", "Docker", "Git", "Linux", "Microsoft Azure"]},
+        {"label": "AI", "items": ["Agentic workflows", "RAG", "LlamaIndex", "OpenAI API"]},
+        {"label": "Other", "items": ["Java", "C++", "Portuguese (Native)", "English (Fluent)"]}
+      ]
+    }
+  ],
+  "gap_report": {
+    "must_have_missing": ["5+ years frontend experience (have ~1 year + internship)", "3+ years Node.js"],
+    "nice_to_have_missing": ["Kubernetes", "AWS"],
+    "unverified_used": [],
+    "questions": ["Which graph library did the Kestrel visualiser use?", "Where have you used Node.js/Express?"],
+    "flags": ["Senior title; the posting says it is flexible on level"]
+  }
+}

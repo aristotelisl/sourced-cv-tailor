@@ -1,0 +1,20 @@
+SYNTHETIC TEST LISTING (written for tests, not a real job)
+
+Backend Software Engineer - Payments Platform
+Northwind Pay - London, United Kingdom (hybrid, 3 days a week in the office)
+Salary: £55,000 - £70,000 per year
+
+About the role
+You'll build and run the Python services behind our payments platform.
+
+What you'll need
+- 2+ years building backend services in Python
+- Experience with FastAPI or Flask
+- PostgreSQL and SQL
+- Docker
+- You must have the right to work in the UK; we cannot offer visa sponsorship.
+
+Nice to have
+- Kubernetes
+- AWS (ECS, Lambda)
+- Experience in fintech or payments

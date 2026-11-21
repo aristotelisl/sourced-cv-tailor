@@ -1,0 +1,191 @@
+# Master profile: the single source of truth for every CV.
+# This one belongs to Jordan Avery, a fictional person. Copy it to data/profile.yaml
+# (scripts/start.ps1 does this on first run) and replace everything with your own facts.
+#
+# Rule: a tailored CV may only use facts from this file. The app rephrases, reorders and
+# selects freely, but never adds a technology, number, responsibility or outcome that isn't
+# here. Bullets marked `verified: false` are shown with a warning until you confirm them.
+
+person:
+  name: Jordan Avery
+  location: Porto, Portugal
+  phone: "+44 7700 900123"
+  email: jordan.avery@example.com
+  website: https://jordanavery.example.com
+  linkedin: https://linkedin.com/in/jordan-avery-example
+  github: https://github.com/jordan-avery-example
+  # Optional header lines, chosen per job (never shown by default)
+  header_extras:
+    uk_presettled: UK Pre-Settled Status      # suggested for UK roles (see preferences)
+    eu_citizen: EU Citizen (Portugal)
+    relocating: null                         # e.g. "Relocating to London"
+  spoken_languages: [Portuguese (Native), English (Fluent)]
+
+education:
+  - id: northgate_msc
+    degree: MSc Computer Science
+    institution: Northgate University
+    location: Northgate, England
+    start: 10/2025
+    end: 09/2026
+    grade: Distinction
+    dissertation: AI-Assisted Generation of Editable Process Diagrams from Written Requirements
+    dissertation_partner: {name: Orbitale, url: https://orbitale.example.com}
+    modules: [Software Engineering, Software Development, AI and Machine Learning]
+  - id: fernhill_bsc
+    degree: BSc (Hons) Computer Science
+    institution: Fernhill University
+    location: Fernhill, England
+    start: 10/2021
+    end: 06/2024
+    dissertation: Machine Learning for Restoring Damaged Historical Photographs
+    modules: [Machine Learning Technologies, Intelligent Systems, Cloud Application Development]
+
+experience:
+  - id: lumora
+    title: Software Developer
+    company: Lumora
+    url: https://lumora.example.com
+    location: Porto, Portugal
+    start: 10/2024
+    end: 09/2025
+    bullets:
+      - id: lumora_agentic_rag
+        text: Designed and implemented agentic AI workflows and RAG pipelines for Lumora's customer-support assistant, with multi-step reasoning and retrieval using LlamaIndex
+        tags: [ai, llm, rag, backend, python, data]
+        verified: true
+      - id: lumora_finetune
+        text: Fine-tuned ML models for the assistant's intent detection, improving answer accuracy on company-specific questions
+        tags: [ai, ml, data]
+        verified: true
+        # TODO: which frameworks? unknown
+      - id: lumora_integrations
+        text: Built backend logic connecting the assistant to the CRM, the ticketing system and live order data
+        tags: [backend, integrations, data, ai]
+        verified: true
+      - id: lumora_microservices
+        text: Designed and maintained modular Python microservices
+        tags: [backend, python]
+        verified: true
+      - id: lumora_website
+        text: Built and launched the company website and customer portal using Next.js, responsive and fast across devices
+        tags: [frontend, fullstack, nextjs]
+        verified: true
+      - id: lumora_aspnet
+        text: Developed and integrated APIs in ASP.NET, connecting services and supporting core features of the assistant
+        tags: [backend, csharp, apis]
+        verified: true
+      - id: lumora_flow_builder
+        text: Built a no-code flow builder where support teams design chatbot conversations by connecting blocks on an interactive canvas
+        stack: [React, Vite]
+        tags: [frontend, react, vite, ai, data-viz]
+        verified: true
+        unconfirmed_details:
+          - TypeScript or JavaScript: unknown
+      - id: lumora_api_routes
+        text: Built Next.js API routes connecting the frontend to backend services and shaping the data each view needed
+        tags: [fullstack, frontend, apis, bff]
+        verified: true
+      - id: lumora_agile
+        text: Worked in an Agile/Scrum team, taking part in sprints, stand-ups and code review
+        verified: true
+
+  - id: kestrel
+    title: Software Engineering Intern
+    company: Kestrel Software
+    url: https://kestrel.example.com
+    location: Lisbon, Portugal
+    start: 07/2023
+    end: 09/2023
+    is_internship: true
+    stack: [React, Node.js]
+    bullets:
+      - id: kestrel_visualiser
+        text: Developed a dependency visualiser web application, helping engineers navigate the relationships between hundreds of packages in a large monorepo
+        tags: [frontend, data-viz, internal-tools, large-codebase]
+        verified: true
+      - id: kestrel_dag
+        text: Implemented search, syntax highlighting and directed acyclic graph visualisations of the package dependency hierarchy
+        tags: [frontend, data-viz, graphs]
+        verified: true
+      - id: kestrel_rampup
+        text: Ramped up quickly on a large, unfamiliar monorepo of hundreds of interdependent packages, working with engineers on the team to understand its structure
+        tags: [large-codebase, collaboration]
+        verified: false   # reasonable framing, but confirm
+        unconfirmed_details:
+          - Which graph library the visualiser used - never name one
+
+projects:
+  - id: flowboard
+    name: FlowBoard (MSc Dissertation)
+    context: Industry project with Orbitale
+    url: null
+    year: 2026
+    stack:
+      frontend: [React 19, TypeScript, Vite, Zustand, Tailwind CSS, shadcn/ui, React Flow, d3-force]
+      backend: [Python, Flask, Pydantic, NetworkX, OpenAI API]
+      infra: [Docker, Docker Compose]
+    facts:
+      - id: fb_overview
+        text: Turns written requirements documents into editable process diagrams
+      - id: fb_agents
+        text: Four LLM agents (summarise, extract steps, link steps, validate), each behind its own Flask endpoint
+      - id: fb_structured_outputs
+        text: Structured outputs via OpenAI structured parsing + Pydantic models
+      - id: fb_hitl
+        text: Human-in-the-loop mode (pause for review at each step) or fully automated mode
+      - id: fb_validation
+        text: Deterministic graph validation in NetworkX (orphan steps, dead ends, unknown references) combined with LLM review
+      - id: fb_editor
+        text: React Flow editor; drag-to-connect creates links; click to edit steps and links
+      - id: fb_layout
+        text: d3-force auto-layout; existing steps pinned so edits never reshuffle the layout
+      - id: fb_store
+        text: Single Zustand store as source of truth; renames and deletes cascade; diagram re-derived on the client with no API call
+      - id: fb_cycles
+        text: Client-side cycle detection (DFS) highlights loops in the process
+      - id: fb_exports
+        text: Exports to PNG and standalone HTML; JSON save/load with validation
+    unconfirmed:
+      - Whether Orbitale used the tool after the project ended
+
+awards:
+  - id: hackathon
+    name: Northgate Hackathon
+    url: https://hackathon.example.com
+    institution: Northgate University
+    date: 05/2026
+    text: 1st place and £1,000 prize for FloodWatch, a team app that sends neighbourhood flood alerts from river-level data
+
+skills:
+  # strong = used professionally or in a substantial project; listed = on the CV, depth unknown
+  strong: [Python, TypeScript, JavaScript, React, Next.js, Vite, Zustand, Flask, Pydantic, NetworkX, LlamaIndex, OpenAI API, RAG, Agentic workflows, Docker, Git, C# (ASP.NET), Tailwind CSS, React Flow, PostgreSQL]
+  listed: [Java, C++, FastAPI, Express.js, Node.js, SQL, Linux, Microsoft Azure, D3, Prompt Engineering]
+  notes:
+    Node.js: Kestrel internship (dependency visualiser), plus personal projects
+    Express.js: personal projects
+    PostgreSQL: 'Used a lot at Lumora: schemas, queries and migrations'
+  # Never add these unless I confirm:
+  not_claimed: [Go, Kubernetes, AWS, Redux, Sass, pandas, NumPy, PyTorch, Power BI, Tableau, Ruby, Scala, BullMQ, Fastify, DuckDB]
+
+open_questions: []
+
+# How the app tailors for you. Every key is optional; leave one out to skip that check.
+preferences:
+  home_places: [Portugal, Porto, Lisbon, Braga]   # on-site/hybrid elsewhere is flagged
+  work_rights:                                    # right-to-work requirements elsewhere are flagged
+    - {label: the UK (pre-settled), places: [uk]} # "uk" and "eu" are built-in regions; or list places
+    - {label: the EU, places: [eu]}
+  home_currencies: [EUR, GBP, CHF, SEK, NOK, DKK, PLN, CZK, HUF, RON, BGN, ISK]   # other salary currencies are flagged
+  header_suggestions:                             # suggest a person.header_extras line for jobs in these places
+    - extra: uk_presettled
+      when_job_in: [uk]
+      reason: 'UK role: shows you can work in the UK without sponsorship'
+  sign_off: "Kind regards,\nJordan"
+  tailoring_notes: |
+    | Role family | Section order | Lead with |
+    |---|---|---|
+    | frontend / fullstack | Employment, Education, Project, Awards, Skills | Next.js work, the flow builder, the React Flow editor |
+    | graduate / new-grad | Education first | Degree, then experience |
+    | backend / ai-engineer | Employment first | Python microservices, RAG pipelines, APIs (ASP.NET, Flask) |
+    - Always keep the MSc dissertation (flowboard) as the Selected Project.

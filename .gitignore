@@ -1,0 +1,10 @@
+.env
+out/
+*.db
+__pycache__/
+node_modules/
+.venv/
+.vscode/
+# Your own profile and example CV (start from examples/)
+data/profile.yaml
+data/example.tailored.json

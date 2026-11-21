@@ -1,0 +1,17 @@
+SYNTHETIC TEST LISTING (written for tests, not a real job)
+
+Frontend Developer (React) - Remote
+Contoso Labs
+
+We're looking for a frontend developer to join our product team.
+
+Requirements:
+- 1-3 years of experience with React and TypeScript
+- Solid HTML/CSS
+- Experience consuming REST APIs
+
+Bonus:
+- Next.js
+- Tailwind CSS
+
+Compensation: ₹12,00,000 - ₹18,00,000 per annum
