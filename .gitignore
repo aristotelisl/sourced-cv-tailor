@@ -8,3 +8,5 @@ node_modules/
 # Your own profile and example CV (start from examples/)
 data/profile.yaml
 data/example.tailored.json
+# Claude Code: your personal permissions/settings for this folder
+.claude/settings.local.json
