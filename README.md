@@ -43,14 +43,16 @@ python -m venv .venv
 .venv/Scripts/python -m playwright install chromium
 cp .env.example .env                              # then choose a provider (see below)
 cp examples/profile.example.yaml data/profile.yaml
-cd frontend && npm install && cd ..
+cd frontend
+npm install
+cd ..
 ```
 
 Run it:
 
 - **Windows**: double-click `run-cv-tailor.bat` (starts both servers and opens the browser).
 - **Anywhere**: `uvicorn backend.main:app --reload` and, in a second terminal,
-  `cd frontend && npm run dev`, then open http://localhost:5173.
+  `npm run dev` inside `frontend/`, then open http://localhost:5173.
 
 The example profile belongs to Jordan Avery, a fictional developer, so you can try the whole flow
 before writing your own.
@@ -121,13 +123,14 @@ because the profile goes into every prompt.
 
 ```bash
 .venv/Scripts/python -m pytest                       # unit tests (no API calls; use the fictional profile)
-cd frontend && npm test && npm run build             # frontend tests and type check
-cd frontend && npm run gen:types                     # after changing a Pydantic model
 .venv/Scripts/python tests/e2e/run.py                # browser end-to-end (some scripts call the API)
-CV_TAILOR_LIVE_TESTS=1 .venv/Scripts/python -m pytest tests/test_tailor_live.py   # live LLM tests (cost money)
 python scripts/render_cv.py examples/example_frontend.tailored.json --out out/
 python scripts/tailor_job.py job.txt --out out/      # tailor one job from the command line
 ```
+
+In `frontend/`: `npm test`, `npm run build` (type check), and `npm run gen:types` after changing a
+Pydantic model. Live LLM tests cost money and are opt-in: set `CV_TAILOR_LIVE_TESTS=1` in the
+environment, then run `pytest tests/test_tailor_live.py`.
 
 Stack: FastAPI, Pydantic v2, Jinja2, Playwright (PDF), SQLite, Anthropic SDK or any
 OpenAI-compatible API with structured outputs (`backend/llm/client.py` is the only place that calls a model); React, TypeScript, Vite, Zustand, Tailwind, shadcn/ui. Pydantic models are the single
