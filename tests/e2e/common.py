@@ -1,6 +1,7 @@
 """Shared bits for the browser scripts: URLs, seeding through the API, and a page that records errors."""
 import copy
 import json
+import os
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -9,8 +10,9 @@ import httpx
 from playwright.sync_api import Page, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-API = "http://127.0.0.1:8000"
-APP = "http://localhost:5173"
+# run.py starts its servers on their own ports, so the app you use can stay open meanwhile.
+API = os.environ.get("CV_TAILOR_E2E_API", "http://127.0.0.1:8100")
+APP = os.environ.get("CV_TAILOR_E2E_APP", "http://localhost:5273")
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "out" / "e2e"
 
 sys.path.insert(0, str(ROOT))

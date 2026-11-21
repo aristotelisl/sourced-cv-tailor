@@ -62,7 +62,8 @@ later from the **Profile** page.
 
 ## Your profile
 
-`data/profile.yaml` is git-ignored. The app creates it from your CV on first run (importing again
+`data/profile.yaml` is git-ignored. The **Profile** page shows it laid out like a CV (unverified
+facts and what your answers added are marked), and you can edit it there as YAML. The app creates it from your CV on first run (importing again
 later keeps a backup of the old one as `data/profile.backup-<date>.yaml`). You can also write it by
 hand, starting from `examples/profile.example.yaml`. What it holds:
 

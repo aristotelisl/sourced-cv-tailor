@@ -32,8 +32,11 @@ function summary({ counts: c }: ProfileImportResult) {
   ].join(', ')
 }
 
-/** First run: read the user's CV into a profile.yaml they check before saving, or explore with the sample. */
-export function ProfileSetup() {
+/**
+ * Read the user's CV into a profile.yaml they check before saving. On first run it also offers the sample
+ * profile; `onCancel` (from the Profile page) goes back to the profile they have instead.
+ */
+export function ProfileSetup({ onCancel }: { onCancel?: () => void }) {
   const { profile, chooseSample, profileReplaced } = useStore()
   const [step, setStep] = useState<Step>('choose')
   const [file, setFile] = useState<File | null>(null)
@@ -70,7 +73,7 @@ export function ProfileSetup() {
     setStep('saving')
     setError(null)
     try {
-      const res = await api.saveProfile(yaml)
+      const res = await api.saveProfile(yaml, { backup: true })
       profileReplaced(res.status)
       navigate('tailor')
     } catch (e) {
@@ -148,7 +151,7 @@ export function ProfileSetup() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{hasOwn ? 'Import a CV' : 'Set up your profile'}</CardTitle>
+        <CardTitle>{hasOwn ? 'Replace your profile from a CV' : 'Set up your profile'}</CardTitle>
         <CardDescription>
           Every CV the app makes comes from your profile, so start by uploading the CV you have now. It's copied
           in as it is: nothing is added that your CV doesn't say, and you check everything before it's saved.
@@ -184,9 +187,9 @@ export function ProfileSetup() {
         </div>
 
         <div className="border-t pt-4 text-sm">
-          {hasOwn ? (
-            <Button variant="outline" onClick={() => navigate('tailor')} disabled={reading}>
-              Keep my current profile
+          {onCancel ? (
+            <Button variant="outline" onClick={onCancel} disabled={reading}>
+              {hasOwn ? 'Keep my current profile' : 'Back to the sample profile'}
             </Button>
           ) : (
             <div className="flex flex-wrap items-center gap-3">

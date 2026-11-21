@@ -64,6 +64,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * View Profile
+         * @description The whole profile, laid out for the Profile page, plus its YAML for editing.
+         */
+        get: operations["view_profile_api_profile_view_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Profile
+         * @description Can this YAML be saved, and which ids of the open CV would it remove? Nothing is saved.
+         */
+        post: operations["check_profile_api_profile_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile/save": {
         parameters: {
             query?: never;
@@ -75,7 +115,7 @@ export interface paths {
         put?: never;
         /**
          * Save Profile
-         * @description Save a whole profile.yaml (from setup). A profile of your own is backed up first.
+         * @description Save a whole profile.yaml (from setup, or edited on the Profile page).
          */
         post: operations["save_profile_api_profile_save_post"];
         delete?: never;
@@ -1014,6 +1054,23 @@ export interface components {
             /** Base */
             base: string;
         };
+        /** ProfileCheckRequest */
+        ProfileCheckRequest: {
+            /** Yaml */
+            yaml: string;
+            /**
+             * Cited
+             * @default []
+             */
+            cited: string[];
+        };
+        /** ProfileCheckResult */
+        ProfileCheckResult: {
+            /** Problems */
+            problems: string[];
+            /** Missing Cited */
+            missing_cited: string[];
+        };
         /** ProfileEdit */
         ProfileEdit: {
             /**
@@ -1086,6 +1143,13 @@ export interface components {
         ProfileSaveRequest: {
             /** Yaml */
             yaml: string;
+            /** Base */
+            base?: string | null;
+            /**
+             * Backup
+             * @default false
+             */
+            backup: boolean;
         };
         /** ProfileSaveResult */
         ProfileSaveResult: {
@@ -1115,6 +1179,31 @@ export interface components {
             header_extras: {
                 [key: string]: string;
             };
+        };
+        /** ProfileView */
+        ProfileView: {
+            /** Yaml */
+            yaml: string;
+            /** Base */
+            base: string;
+            /** Name */
+            name: string;
+            /** Contact */
+            contact: string[];
+            /** Experience */
+            experience: components["schemas"]["ViewEntry"][];
+            /** Education */
+            education: components["schemas"]["ViewEntry"][];
+            /** Projects */
+            projects: components["schemas"]["ViewEntry"][];
+            /** Awards */
+            awards: components["schemas"]["ViewEntry"][];
+            /** Skills */
+            skills: {
+                [key: string]: string[];
+            };
+            /** Open Questions */
+            open_questions: string[];
         };
         /** RequirementCoverage */
         RequirementCoverage: {
@@ -1256,6 +1345,39 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /**
+         * ViewEntry
+         * @description A job, degree, project or award, laid out the way the page shows it.
+         */
+        ViewEntry: {
+            /** Id */
+            id: string;
+            /** Heading */
+            heading: string;
+            /** Subheading */
+            subheading: string;
+            /** Dates */
+            dates: string;
+            /** Details */
+            details: string[];
+            /** Items */
+            items: components["schemas"]["ViewItem"][];
+            /** Verified */
+            verified: boolean;
+            /** Added */
+            added: string | null;
+        };
+        /** ViewItem */
+        ViewItem: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Verified */
+            verified: boolean;
+            /** Added */
+            added: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -1325,6 +1447,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    view_profile_api_profile_view_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+        };
+    };
+    check_profile_api_profile_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileCheckResult"];
                 };
             };
             /** @description Validation Error */

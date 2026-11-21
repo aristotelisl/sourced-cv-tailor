@@ -39,7 +39,7 @@ applies to you: don't add facts about the user to `profile.yaml` unless they've 
 - After changing a Pydantic model: `cd frontend && npm run gen:types` (regenerates `src/api/schema.ts`)
 - Tests: `pytest` (venv: `.venv\Scripts\python -m pytest`)
 - Live LLM tests (real API calls, cost money): set `CV_TAILOR_LIVE_TESTS=1` and run `pytest tests/test_analyse_live.py tests/test_tailor_live.py tests/test_polish_live.py tests/test_import_live.py`
-- Browser end-to-end (starts both servers on a temp DB and a temp copy of the profile; some scripts call the API): `.venv\Scripts\python tests/e2e/run.py [e2e_tracker.py]`
+- Browser end-to-end (starts both servers on :8100/:5273 with a temp DB and a temp copy of the profile, so your running app is untouched; some scripts call the API): `.venv\Scripts\python tests/e2e/run.py [e2e_tracker.py]`
 - Settings: copy `.env.example` to `.env` (`ANTHROPIC_API_KEY`, or `CV_TAILOR_PROVIDER=openai` + `CV_TAILOR_BASE_URL`/`CV_TAILOR_API_KEY`; optional `CV_TAILOR_MODEL[_<STEP>]`, `CV_TAILOR_DB`, `CV_TAILOR_PROFILE`)
 - API cost: every model call is logged to the backend console and the `llm_usage` table; summary: `.venv\Scripts\python scripts/usage_report.py [--days 7]`
 - First run: the app opens on profile setup (upload a CV, or explore with the sample profile, which copies

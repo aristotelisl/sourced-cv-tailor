@@ -6,13 +6,14 @@ from backend.llm.answer import EditsRejected
 from backend.models.base import StrictModel
 from backend.models.profile_edit import ProfileAnswerRequest, ProfileApplied, ProfileApplyRequest, ProfileProposal
 from backend.models.profile_import import (
-    ProfileImportRequest, ProfileImportResult, ProfileSaveRequest, ProfileSaveResult, ProfileStatus,
+    ProfileCheckRequest, ProfileCheckResult, ProfileImportRequest, ProfileImportResult, ProfileSaveRequest,
+    ProfileSaveResult, ProfileStatus, ProfileView,
 )
 from backend.profile import load_profile, profile_records
 from backend.profile_edit import service
 from backend.profile_edit.service import EditsInvalid, ProfileChanged
 from backend.profile_import import service as setup
-from backend.profile_import.service import InvalidProfile
+from backend.profile_import.service import InvalidProfile, ProfileChanged as ProfileFileChanged
 from backend.profile_import.text import UnreadableFile
 
 router = APIRouter(prefix="/api", tags=["profile"])
@@ -55,13 +56,27 @@ def import_cv(req: ProfileImportRequest) -> ProfileImportResult:
         raise HTTPException(502, {"error": "llm_failed", "message": str(e)}) from e
 
 
+@router.get("/profile/view")
+def view_profile() -> ProfileView:
+    """The whole profile, laid out for the Profile page, plus its YAML for editing."""
+    return setup.view()
+
+
+@router.post("/profile/check")
+def check_profile(req: ProfileCheckRequest) -> ProfileCheckResult:
+    """Can this YAML be saved, and which ids of the open CV would it remove? Nothing is saved."""
+    return setup.check(req)
+
+
 @router.post("/profile/save")
 def save_profile(req: ProfileSaveRequest) -> ProfileSaveResult:
-    """Save a whole profile.yaml (from setup). A profile of your own is backed up first."""
+    """Save a whole profile.yaml (from setup, or edited on the Profile page)."""
     try:
         return setup.save(req)
     except InvalidProfile as e:
         raise HTTPException(422, {"error": "invalid_profile", "message": str(e), "problems": e.problems}) from e
+    except ProfileFileChanged as e:
+        raise HTTPException(409, {"error": "profile_changed", "message": str(e)}) from e
 
 
 @router.get("/profile")

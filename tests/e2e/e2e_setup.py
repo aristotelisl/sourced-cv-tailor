@@ -28,7 +28,7 @@ def fake_import(route: Route) -> None:
 
 
 def run() -> None:
-    with browser_page(1200, 900, sample_chosen=False, expected_errors=1) as page:  # 1: the invalid YAML
+    with browser_page(1200, 900, sample_chosen=False, expected_errors=2) as page:  # invalid YAML, stale edit
         steps(page)
 
 
@@ -46,6 +46,9 @@ def steps(page) -> None:
     print("explore with the sample: tailor page with a banner, remembered on reload: ok")
 
     page.get_by_role("link", name="Set up your own profile").click()
+    expect(page.get_by_text("This is the sample profile")).to_be_visible()
+    expect(page.get_by_text("Kestrel Software (internship)")).to_be_visible()
+    page.get_by_role("button", name="Set up your own from your CV").click()
     page.route("**/api/profile/import", fake_import)
     page.get_by_label("CV file").set_input_files(
         files=[{"name": "cv.txt", "mimeType": "text/plain", "buffer": b"Sam Example\nSoftware Developer, Lumora"}])
@@ -70,9 +73,34 @@ def steps(page) -> None:
     print("save -> profile is your own, back on the tailor page: ok")
 
     page.get_by_role("link", name="Profile").click()
-    expect(page.get_by_text("Import a CV")).to_be_visible()
-    expect(page.get_by_role("button", name="Keep my current profile")).to_be_visible()
-    print("profile page with a profile of your own offers re-import: ok")
+    expect(page.get_by_text("Sam Example")).to_be_visible()
+    expect(page.get_by_text("This is the sample profile")).to_have_count(0)
+    expect(page.get_by_text("unverified").first).to_be_visible()  # kestrel_rampup
+    page.screenshot(path=OUT / "s2-profile-view.png", full_page=True)
+    print("profile page shows your profile: ok")
+
+    page.get_by_role("button", name="Edit as YAML").click()
+    box = page.get_by_label("Profile YAML")
+    box.fill(box.input_value().replace("Porto, Portugal", "Braga, Portugal", 1))
+    page.get_by_role("button", name="Save").click()
+    expect(page.get_by_role("button", name="Edit as YAML")).to_be_visible()  # back on the view
+    expect(page.get_by_text("Braga, Portugal").first).to_be_visible()
+    assert "Braga, Portugal" in PROFILE.read_text(encoding="utf-8")
+    print("edit as YAML -> saved and shown: ok")
+
+    page.get_by_role("button", name="Edit as YAML").click()
+    PROFILE.write_text(PROFILE.read_text(encoding="utf-8") + "# changed elsewhere\n", encoding="utf-8")
+    box.fill(box.input_value().replace("Braga, Portugal", "Lisbon, Portugal", 1))
+    page.get_by_role("button", name="Save").click()
+    expect(page.get_by_text("changed since you opened it")).to_be_visible()
+    page.get_by_role("button", name="Cancel").click()
+    print("an edit over a newer profile is refused: ok")
+
+    page.get_by_role("button", name="Replace from a CV").click()
+    expect(page.get_by_text("Replace your profile from a CV")).to_be_visible()
+    page.get_by_role("button", name="Keep my current profile").click()
+    expect(page.get_by_role("button", name="Edit as YAML")).to_be_visible()
+    print("replace from a CV can be cancelled: ok")
 
 
 try:

@@ -29,6 +29,9 @@ export type ProfileStatus = S['ProfileStatus']
 export type ProfileImportRequest = S['ProfileImportRequest']
 export type ProfileImportResult = S['ProfileImportResult']
 export type ProfileSaveResult = S['ProfileSaveResult']
+export type ProfileView = S['ProfileView']
+export type ViewEntry = S['ViewEntry']
+export type ProfileCheckResult = S['ProfileCheckResult']
 
 export class ApiError extends Error {
   readonly problems: string[]
@@ -86,7 +89,12 @@ export const api = {
   useExampleProfile: async (): Promise<ProfileStatus> => (await post('/api/profile/use-example', {})).json(),
   importCv: async (req: ProfileImportRequest): Promise<ProfileImportResult> =>
     (await post('/api/profile/import', req)).json(),
-  saveProfile: async (yaml: string): Promise<ProfileSaveResult> => (await post('/api/profile/save', { yaml })).json(),
+  /** `base`: the hash the edit started from (refused if the file changed); `backup`: keep the old one (import). */
+  saveProfile: async (yaml: string, opts: { base?: string; backup?: boolean } = {}): Promise<ProfileSaveResult> =>
+    (await post('/api/profile/save', { yaml, ...opts })).json(),
+  profileView: async (): Promise<ProfileView> => (await request('/api/profile/view')).json(),
+  checkProfile: async (yaml: string, cited: string[]): Promise<ProfileCheckResult> =>
+    (await post('/api/profile/check', { yaml, cited })).json(),
 
   // Profile: the bullet bank, and answering gap-report questions into profile.yaml
   bank: async (): Promise<Record<string, BankItem[]>> => (await request('/api/profile/bank')).json(),

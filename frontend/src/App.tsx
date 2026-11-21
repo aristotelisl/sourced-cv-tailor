@@ -5,7 +5,7 @@ import { GapReport } from '@/components/GapReport'
 import { HeaderExtras } from '@/components/HeaderExtras'
 import { JobInput } from '@/components/JobInput'
 import { Preview } from '@/components/Preview'
-import { ProfileSetup } from '@/components/ProfileSetup'
+import { ProfilePage } from '@/components/ProfilePage'
 import { Tracker } from '@/components/Tracker'
 import { useEffect } from 'react'
 
@@ -76,7 +76,7 @@ export default function App() {
 
       {page === 'loading' ? null : page === 'profile' ? (
         <main className="mx-auto max-w-3xl space-y-4 p-6">
-          <ProfileSetup />
+          <ProfilePage />
         </main>
       ) : page === 'tracker' ? (
         <main className="mx-auto max-w-6xl space-y-4 p-6">

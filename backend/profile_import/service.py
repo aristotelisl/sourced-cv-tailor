@@ -1,4 +1,4 @@
-"""First-run profile setup: is there a profile of your own yet, read a CV into one, save it."""
+"""The Profile page: is there a profile of your own yet, read a CV into one, view, check and save it."""
 import base64
 import binascii
 import os
@@ -11,12 +11,18 @@ import yaml
 from backend import paths
 from backend.llm.import_cv import extract_profile
 from backend.models.profile_import import (
-    ProfileImportRequest, ProfileImportResult, ProfileSaveRequest, ProfileSaveResult, ProfileStatus,
+    ProfileCheckRequest, ProfileCheckResult, ProfileImportRequest, ProfileImportResult, ProfileSaveRequest,
+    ProfileSaveResult, ProfileStatus, ProfileView,
 )
 from backend.profile import profile_records
-from backend.profile_edit.edits import ID_PATTERN
+from backend.profile_edit.edits import ID_PATTERN, profile_hash
 from backend.profile_import import build
 from backend.profile_import.text import UnreadableFile, clean, extract_text
+from backend.profile_import.view import profile_view
+
+
+class ProfileChanged(Exception):
+    """profile.yaml changed since the page loaded it (e.g. a gap-report answer was saved meanwhile)."""
 
 
 class InvalidProfile(ValueError):
@@ -93,12 +99,27 @@ def check_profile(text: str) -> list[str]:
     return problems
 
 
+def view() -> ProfileView:
+    return profile_view(_path().read_text(encoding="utf-8"))
+
+
+def check(req: ProfileCheckRequest) -> ProfileCheckResult:
+    problems = check_profile(req.yaml)
+    if problems:
+        return ProfileCheckResult(problems=problems, missing_cited=[])
+    ids = set(profile_records(yaml.safe_load(req.yaml)))
+    return ProfileCheckResult(problems=[], missing_cited=[i for i in dict.fromkeys(req.cited) if i not in ids])
+
+
 def save(req: ProfileSaveRequest) -> ProfileSaveResult:
     if problems := check_profile(req.yaml):
         raise InvalidProfile(problems)
     path = _path()
+    if req.base is not None and (not path.exists() or profile_hash(path.read_text(encoding="utf-8")) != req.base):
+        raise ProfileChanged("Your profile changed since you opened it (maybe an answer was saved in another tab). "
+                             "Copy your edits, reload the page and make them again.")
     backup = None
-    if path.exists() and status().state == "own":
+    if req.backup and path.exists() and status().state == "own":
         # Never lose a profile someone has worked on: keep a copy next to it (git-ignored).
         backup_path = path.with_name(f"profile.backup-{datetime.now():%Y%m%d-%H%M%S}.yaml")
         shutil.copyfile(path, backup_path)

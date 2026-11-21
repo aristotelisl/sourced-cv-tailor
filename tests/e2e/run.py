@@ -3,8 +3,9 @@
     .venv\\Scripts\\python tests/e2e/run.py                 # all e2e_*.py
     .venv\\Scripts\\python tests/e2e/run.py e2e_tracker.py  # one script
 
-Starts the backend (:8000) and Vite (:5173) with a temp SQLite file and a temp copy of
-profile.yaml, so your real tracker and profile are never touched. Screenshots and PDFs go to
+Starts the backend (:8100) and Vite (:5273) with a temp SQLite file and a temp copy of
+profile.yaml, so your real tracker and profile are never touched. They use their own ports, so the
+app you normally run (:8000 and :5173) can stay open. Screenshots and PDFs go to
 out/e2e/. e2e_tailor, e2e_extras and e2e_polish call the real Claude API (a few cents each).
 """
 import os
@@ -42,8 +43,12 @@ def stop(proc: subprocess.Popen) -> None:
     proc.wait()
 
 
+API_PORT, APP_PORT = 8100, 5273
+API, APP = f"http://127.0.0.1:{API_PORT}", f"http://localhost:{APP_PORT}"
+
+
 def main(names: list[str]) -> int:
-    for url in ("http://127.0.0.1:8000/api/health", "http://localhost:5173"):
+    for url in (f"{API}/api/health", APP):
         try:
             httpx.get(url, timeout=1)
             raise SystemExit(f"Something is already running at {url}; stop it first.")
@@ -54,18 +59,19 @@ def main(names: list[str]) -> int:
     tmp = Path(tempfile.mkdtemp(prefix="cv-tailor-e2e-"))
     profile = tmp / "profile.yaml"
     shutil.copy(ROOT / "examples/profile.example.yaml", profile)
-    env = os.environ | {"CV_TAILOR_DB": str(tmp / "e2e.db"), "CV_TAILOR_PROFILE": str(profile)}
+    env = os.environ | {"CV_TAILOR_DB": str(tmp / "e2e.db"), "CV_TAILOR_PROFILE": str(profile),
+                        "CV_TAILOR_API_PORT": str(API_PORT), "CV_TAILOR_E2E_API": API, "CV_TAILOR_E2E_APP": APP}
 
     servers = [
-        subprocess.Popen([PYTHON, "-m", "uvicorn", "backend.main:app", "--port", "8000"], cwd=ROOT, env=env,
+        subprocess.Popen([PYTHON, "-m", "uvicorn", "backend.main:app", "--port", str(API_PORT)], cwd=ROOT, env=env,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL),
-        subprocess.Popen("npm run dev -- --port 5173 --strictPort", cwd=ROOT / "frontend", env=env, shell=True,
+        subprocess.Popen(f"npm run dev -- --port {APP_PORT} --strictPort", cwd=ROOT / "frontend", env=env, shell=True,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL),
     ]
     failed = []
     try:
-        wait_for("http://127.0.0.1:8000/api/health")
-        wait_for("http://localhost:5173")
+        wait_for(f"{API}/api/health")
+        wait_for(APP)
         out = ROOT / "out" / "e2e"
         for script in scripts:
             print(f"\n=== {script.name}", flush=True)

@@ -1,4 +1,4 @@
-"""Setting up a first profile: reading an uploaded CV into profile.yaml, or starting from the sample."""
+"""The Profile page: setting up a first profile (from a CV, or the sample), viewing it, editing its YAML."""
 from typing import Literal
 
 from pydantic import Field
@@ -104,8 +104,55 @@ class ProfileImportResult(StrictModel):
 
 class ProfileSaveRequest(StrictModel):
     yaml: str
+    base: str | None = None  # hash of the profile the edit started from; refused if it changed since
+    backup: bool = False     # replacing the whole profile (from a CV): keep a copy of one of your own
 
 
 class ProfileSaveResult(StrictModel):
     status: ProfileStatus
     backup: str | None  # where the previous profile was copied, if there was one of your own
+
+
+# --- Viewing and checking ---------------------------------------------------------------
+
+
+class ViewItem(StrictModel):
+    id: str
+    text: str
+    verified: bool
+    added: str | None  # "added 2026-11-21" when a gap-report answer put it there
+
+
+class ViewEntry(StrictModel):
+    """A job, degree, project or award, laid out the way the page shows it."""
+    id: str
+    heading: str          # title / degree / project or award name
+    subheading: str       # company / institution / context
+    dates: str
+    details: list[str]    # grade, dissertation, modules, stack...
+    items: list[ViewItem]  # bullets or facts
+    verified: bool
+    added: str | None
+
+
+class ProfileView(StrictModel):
+    yaml: str
+    base: str  # send back with an edit, so a change made elsewhere meanwhile isn't overwritten
+    name: str
+    contact: list[str]
+    experience: list[ViewEntry]
+    education: list[ViewEntry]
+    projects: list[ViewEntry]
+    awards: list[ViewEntry]
+    skills: dict[str, list[str]]  # strong / listed / not_claimed
+    open_questions: list[str]
+
+
+class ProfileCheckRequest(StrictModel):
+    yaml: str
+    cited: list[str] = []  # ids the CV open in the app uses
+
+
+class ProfileCheckResult(StrictModel):
+    problems: list[str]       # the profile can't be saved
+    missing_cited: list[str]  # ids the open CV uses that the new profile no longer has

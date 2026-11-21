@@ -9,7 +9,7 @@ export default defineConfig({
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
   server: {
-    // The FastAPI backend (uvicorn backend.main:app) runs on :8000.
-    proxy: { '/api': 'http://127.0.0.1:8000' },
+    // The FastAPI backend (uvicorn backend.main:app) runs on :8000 (browser tests use another port).
+    proxy: { '/api': `http://127.0.0.1:${process.env.CV_TAILOR_API_PORT ?? 8000}` },
   },
 })

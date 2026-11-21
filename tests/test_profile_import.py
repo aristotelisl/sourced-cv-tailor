@@ -1,7 +1,8 @@
-"""First-run setup: reading a CV into a profile (nothing added on the way in), and saving it."""
+"""The Profile page: reading a CV into a profile (nothing added on the way in), viewing, checking, saving."""
 import base64
 import io
 import zipfile
+from datetime import date
 
 import pytest
 import yaml
@@ -16,7 +17,10 @@ from backend.models.profile_import import (
 from backend.profile import profile_records
 from backend.profile_import import build
 from backend.profile_import.check import check_import
+from backend.profile_edit.edits import apply_edits, profile_hash
+from backend.models.profile_edit import ProfileEdit
 from backend.profile_import.text import UnreadableFile, extract_text
+from backend.profile_import.view import answer_stamps
 
 api = TestClient(app)
 
@@ -91,6 +95,11 @@ def with_bullet(draft: ImportedProfile, text: str) -> ImportedProfile:
     draft = draft.model_copy(deep=True)
     draft.experience[0].bullets[1].text = text
     return draft
+
+
+@pytest.fixture
+def profile_text() -> str:
+    return paths.EXAMPLE_PROFILE_PATH.read_text(encoding="utf-8")
 
 
 @pytest.fixture
@@ -251,11 +260,11 @@ def test_saving_over_the_sample_needs_no_backup_but_your_own_gets_one(profile_co
     data, flagged, _ = build.resolve(good_draft(person=good_draft().person.model_copy(update={"name": "Sam Lee"})), [])
     text = build.to_yaml(data, flagged, [])
 
-    res = api.post("/api/profile/save", json={"yaml": text}).json()
+    res = api.post("/api/profile/save", json={"yaml": text, "backup": True}).json()
     assert res == {"status": {"state": "own", "name": "Sam Lee"}, "backup": None}
     assert profile_copy.read_text(encoding="utf-8") == text
 
-    res = api.post("/api/profile/save", json={"yaml": text.replace("Sam Lee", "Sam K. Lee")}).json()
+    res = api.post("/api/profile/save", json={"yaml": text.replace("Sam Lee", "Sam K. Lee"), "backup": True}).json()
     backups = list(profile_copy.parent.glob("profile.backup-*.yaml"))
     assert res["backup"] and len(backups) == 1 and "Sam Lee" in backups[0].read_text(encoding="utf-8")
 
@@ -273,3 +282,63 @@ def test_save_refuses_a_profile_the_app_cant_load(profile_copy, text, expect):
     res = api.post("/api/profile/save", json={"yaml": text})
     assert res.status_code == 422 and expect in str(res.json()["detail"]["problems"])
     assert profile_copy.read_text(encoding="utf-8") == before
+
+
+def test_edits_on_the_profile_page_make_no_backups(profile_copy):
+    text = profile_copy.read_text(encoding="utf-8").replace("Jordan Avery", "Sam Lee")
+    api.post("/api/profile/save", json={"yaml": text}).raise_for_status()
+    res = api.post("/api/profile/save", json={"yaml": text.replace("Porto, Portugal", "Braga, Portugal", 1)})
+    assert res.json()["backup"] is None
+    assert list(profile_copy.parent.glob("profile.backup-*.yaml")) == []
+
+
+def test_save_refuses_when_the_profile_changed_since_it_was_opened(profile_copy):
+    view = api.get("/api/profile/view").json()
+    # Meanwhile a gap-report answer is saved:
+    profile_copy.write_text(view["yaml"] + "# changed\n", encoding="utf-8")
+    res = api.post("/api/profile/save", json={"yaml": view["yaml"], "base": view["base"]})
+    assert res.status_code == 409 and "changed since you opened it" in res.json()["detail"]["message"]
+    assert profile_copy.read_text(encoding="utf-8").endswith("# changed\n")
+
+    fresh = api.get("/api/profile/view").json()
+    edited = fresh["yaml"].replace("Porto, Portugal", "Braga, Portugal", 1)
+    assert api.post("/api/profile/save", json={"yaml": edited, "base": fresh["base"]}).status_code == 200
+
+
+# --- viewing and checking -----------------------------------------------------------------
+
+def test_view_lays_out_the_sample_profile(profile_copy):
+    view = api.get("/api/profile/view").json()
+    assert view["name"] == "Jordan Avery"
+    assert view["base"] == profile_hash(profile_copy.read_text(encoding="utf-8"))
+    assert "jordan.avery@example.com" in view["contact"]
+    lumora, kestrel = view["experience"]
+    assert (lumora["heading"], lumora["subheading"], lumora["dates"]) == ("Software Developer", "Lumora",
+                                                                          "10/2024 - 09/2025")
+    assert kestrel["subheading"] == "Kestrel Software (internship)"
+    rampup = next(i for i in kestrel["items"] if i["id"] == "kestrel_rampup")
+    assert rampup["verified"] is False
+    assert "Grade: Distinction" in view["education"][0]["details"]
+    assert any(d.startswith("Stack: React 19, TypeScript") for d in view["projects"][0]["details"])
+    assert "Kubernetes" in view["skills"]["not_claimed"]
+
+
+def test_view_marks_what_answers_added_or_confirmed(profile_text):
+    edits = [
+        ProfileEdit(op="add_experience_bullet", target="lumora", id="lumora_docker", text="Ran services in Docker",
+                    quote="x"),
+        ProfileEdit(op="verify", target="kestrel_rampup", id=None, text="", quote="x"),
+        ProfileEdit(op="set_grade", target="fernhill_bsc", id=None, text="First", quote="x"),
+    ]
+    text = apply_edits(profile_text, edits, today=date(2026, 11, 21))
+    assert answer_stamps(text) == {"lumora_docker": "added 2026-11-21", "kestrel_rampup": "confirmed 2026-11-21",
+                                   "fernhill_bsc": "added 2026-11-21"}
+
+
+def test_check_reports_ids_the_open_cv_would_lose(profile_copy):
+    text = profile_copy.read_text(encoding="utf-8")
+    without = text.replace("      - id: lumora_website\n", "      - id: lumora_site\n")
+    res = api.post("/api/profile/check", json={"yaml": without, "cited": ["lumora", "lumora_website"]}).json()
+    assert res == {"problems": [], "missing_cited": ["lumora_website"]}
+    res = api.post("/api/profile/check", json={"yaml": "person: [", "cited": []}).json()
+    assert res["problems"] and res["missing_cited"] == []
