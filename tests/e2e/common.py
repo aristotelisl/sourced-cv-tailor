@@ -45,9 +45,11 @@ def browser_page(width: int = 1500, height: int = 1000, sample_chosen: bool = Tr
     OUT.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page: Page = browser.new_page(viewport={"width": width, "height": height}, accept_downloads=True)
+        # One context, so extra tabs (page.context.new_page()) share localStorage like a real browser.
+        context = browser.new_context(viewport={"width": width, "height": height}, accept_downloads=True)
+        page: Page = context.new_page()
         if sample_chosen:
-            page.add_init_script("if (!localStorage.getItem('cv-tailor')) localStorage.setItem('cv-tailor', "
+            context.add_init_script("if (!localStorage.getItem('cv-tailor')) localStorage.setItem('cv-tailor', "
                                  "JSON.stringify({state: {sampleChosen: true}, version: 0}))")
         errors: list[str] = []
         page.on("pageerror", lambda e: errors.append(str(e)))
@@ -62,5 +64,5 @@ def open_in_editor(page: Page) -> None:
     from playwright.sync_api import expect
     page.goto(f"{APP}/#/tracker")
     page.get_by_text(JOB_TITLE).first.click()
-    page.get_by_role("button", name="Open").first.click()
+    page.get_by_role("link", name="Open", exact=True).first.click()
     expect(page.get_by_role("button", name="Download PDF")).to_be_visible(timeout=15_000)

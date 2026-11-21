@@ -6,16 +6,19 @@ import {
   type TailoredCV,
 } from '@/api/client'
 import * as edits from '@/lib/cv'
+import { drafts } from '@/lib/drafts'
+import { navigate } from '@/lib/route'
 
 type Busy = null | 'analyse' | 'tailor' | 'export' | 'open' | 'extra' | 'rewrite' | 'letter'
 
 interface State {
-  applicationId: number | null // the tracker row this work belongs to
+  applicationId: number | null // the tracker row this work belongs to (the URL says which: #/applications/42)
+  versionId: number | null     // the saved CV version the editor started from
   jobText: string
   analysis: JobAnalysis | null
   result: TailorResult | null // coverage + header suggestions from the last tailoring run
   cv: TailoredCV | null       // the editable CV
-  edited: boolean             // cv differs from what tailoring returned
+  edited: boolean             // cv has changes not saved as a version (kept as a draft per application)
   extras: Extra[]             // cover letters etc. saved for this application, newest first
   bank: Record<string, BankItem[]> | null // profile bullets/facts by entry id, for swapping (not persisted)
   busy: Busy
@@ -28,7 +31,10 @@ interface State {
   analyse: () => Promise<void>
   tailor: () => Promise<void>
   exportPdf: () => Promise<void>
+  /** Load an application (and a version of its CV, or its sent/newest one); unsaved edits come back from its draft. */
   openApplication: (id: number, versionId?: number | null) => Promise<boolean>
+  /** The #/new page: an empty application, with any job text pasted there before. */
+  startNew: () => void
   generateExtra: (kind: ExtraKind, recipient: string, notes: string) => Promise<void>
   /** Rewrite `current` (as edited) following `feedback`; the result is saved as a new text above it. */
   rewriteExtra: (kind: ExtraKind, current: string, feedback: string, recipient: string, notes: string) => Promise<void>
@@ -40,14 +46,15 @@ interface State {
   chooseSample: () => Promise<void>
   /** A new profile.yaml was saved: work tailored from the old one no longer matches it. */
   profileReplaced: (status: ProfileStatus) => void
+  /** "New application": start over, dropping the pasted job text too. */
   reset: () => void
   clearError: () => void
   editCv: (fn: (cv: TailoredCV) => TailoredCV) => void
 }
 
 const empty = {
-  applicationId: null, jobText: '', analysis: null, result: null, cv: null, edited: false, extras: [],
-  bank: null, busy: null, error: null,
+  applicationId: null, versionId: null, jobText: '', analysis: null, result: null, cv: null, edited: false,
+  extras: [], bank: null, busy: null, error: null,
 }
 
 function toError(e: unknown) {
@@ -74,10 +81,15 @@ export const useStore = create<State>()(persist((set, get) => {
   async function saveVersion(label: string, markSent = false) {
     const { cv, result } = get()
     if (!cv) return
-    await api.addVersion(await ensureApplication(), {
+    const id = await ensureApplication()
+    const version = await api.addVersion(id, {
       label, cv, mark_sent: markSent,
       coverage: result?.coverage ?? [], header_extra_suggestions: result?.header_extra_suggestions ?? [],
     })
+    // Saved: no draft needed, and the URL now points at this version (so a reload shows it).
+    drafts.remove(id)
+    set({ versionId: version.id, edited: false })
+    navigate({ page: 'application', id, versionId: version.id }, { replace: true })
   }
 
   async function run(busy: Busy, fn: () => Promise<void>) {
@@ -93,15 +105,21 @@ export const useStore = create<State>()(persist((set, get) => {
 
   return {
     ...empty,
+    jobText: drafts.loadNewJob(),
     profile: null,
     sampleChosen: false,
 
-    setJobText: jobText => set({ jobText }),
+    setJobText: jobText => {
+      set({ jobText })
+      if (get().applicationId == null) drafts.saveNewJob(jobText)
+    },
 
     analyse: () => run('analyse', async () => {
       const analysis = await api.analyse(get().jobText)
-      set({ analysis, applicationId: null, result: null, cv: null, edited: false, extras: [] })
-      await ensureApplication() // every analysed job shows up in the tracker as a draft
+      set({ analysis, applicationId: null, versionId: null, result: null, cv: null, edited: false, extras: [] })
+      const id = await ensureApplication() // every analysed job shows up in the tracker as a draft
+      drafts.saveNewJob('')
+      navigate({ page: 'application', id, versionId: null })
     }),
 
     tailor: () => run('tailor', async () => {
@@ -109,7 +127,7 @@ export const useStore = create<State>()(persist((set, get) => {
       if (!analysis) return
       const result = await api.tailor(analysis)
       // Keep header lines the user already ticked.
-      set({ result, cv: { ...result.cv, header_extras: cv?.header_extras ?? [] }, edited: false })
+      set({ result, cv: { ...result.cv, header_extras: cv?.header_extras ?? [] } })
       await saveVersion('Tailored')
     }),
 
@@ -127,10 +145,12 @@ export const useStore = create<State>()(persist((set, get) => {
         const app = await api.getApplication(id)
         const vid = versionId ?? app.cv_version_id ?? app.versions[0]?.id ?? null
         const v = vid != null ? await api.getVersion(vid) : null
+        const draft = drafts.load(id)
+        const useDraft = draft !== null && (draft.versionId === null || draft.versionId === vid)
         set({
-          applicationId: app.id, jobText: app.job_text, analysis: app.analysis, edited: false,
+          applicationId: app.id, versionId: vid, jobText: app.job_text, analysis: app.analysis,
           result: v && { cv: v.cv, coverage: v.coverage, header_extra_suggestions: v.header_extra_suggestions },
-          cv: v?.cv ?? null, extras: app.extras,
+          cv: useDraft ? draft.cv : v?.cv ?? null, edited: useDraft, extras: app.extras,
         })
         ok = true
       })
@@ -203,18 +223,35 @@ export const useStore = create<State>()(persist((set, get) => {
 
     profileReplaced: status => set({ ...empty, profile: status, sampleChosen: false }),
 
-    reset: () => set({ ...empty, bank: get().bank }),
+    startNew: () => set({ ...empty, jobText: drafts.loadNewJob(), bank: get().bank }),
+
+    reset: () => {
+      drafts.saveNewJob('')
+      set({ ...empty, bank: get().bank })
+    },
     clearError: () => set({ error: null }),
     editCv: fn => {
-      const { cv } = get()
-      if (cv) set({ cv: fn(cv), edited: true })
+      const { cv, applicationId, versionId } = get()
+      if (!cv) return
+      const next = fn(cv)
+      set({ cv: next, edited: true })
+      if (applicationId != null) drafts.save(applicationId, { versionId, cv: next })
     },
   }
 }, {
   name: 'cv-tailor',
-  // Tailoring costs a minute and a few cents: keep the work across reloads, but not transient state.
-  partialize: ({ applicationId, jobText, analysis, result, cv, edited, extras, sampleChosen }) =>
-    ({ applicationId, jobText, analysis, result, cv, edited, extras, sampleChosen }),
+  // Shared by every tab, so only app-wide settings live here. Which application is open is in the URL;
+  // unsaved edits are drafts per application (lib/drafts.ts).
+  version: 1,
+  partialize: ({ sampleChosen }) => ({ sampleChosen }),
+  migrate: (old, version) => {
+    // Before v1 the open application lived here too. It's dropped, not turned into a draft: the saved state
+    // may come from another copy of the app on the same address, whose application ids mean something else.
+    // A pasted job that wasn't analysed yet is kept.
+    const o = (old ?? {}) as Partial<State>
+    if (version < 1 && o.applicationId == null && o.jobText) drafts.saveNewJob(o.jobText)
+    return { sampleChosen: o.sampleChosen ?? false } as State
+  },
 }))
 
 export { edits }

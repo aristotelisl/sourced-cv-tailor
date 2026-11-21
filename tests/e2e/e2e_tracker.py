@@ -27,9 +27,10 @@ with browser_page(1400, 900) as page:
     print("notes saved on blur: ok")
     page.screenshot(path=OUT / "t1-tracker.png", full_page=True)
 
-    page.get_by_role("button", name="Open").first.click()
+    page.get_by_role("link", name="Open", exact=True).first.click()
     expect(page.get_by_role("button", name="Download PDF")).to_be_visible(timeout=15_000)
-    assert page.url.endswith("#/")
+    first = httpx.get(f"{API}/api/applications/{app['id']}").json()["versions"][0]["id"]
+    assert page.url.endswith(f"#/applications/{app['id']}/versions/{first}"), page.url
     print("open version in editor: ok")
 
     page.get_by_role("button", name="Remove bullet").first.click()

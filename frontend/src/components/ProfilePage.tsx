@@ -95,6 +95,7 @@ export function ProfilePage() {
   const [mode, setMode] = useState<Mode>('view')
   const [view, setView] = useState<ProfileView | null>(null)
   const [yaml, setYaml] = useState('')
+  const [editBase, setEditBase] = useState('') // the profile the edit started from (the view may reload meanwhile)
   const [lost, setLost] = useState<string[]>([]) // ids the open CV uses that the edit removes
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
@@ -114,6 +115,7 @@ export function ProfilePage() {
   const startEdit = () => {
     if (!view) return
     setYaml(view.yaml)
+    setEditBase(view.base)
     setLost([])
     setError(null)
     setMode('edit')
@@ -132,7 +134,7 @@ export function ProfilePage() {
           return
         }
       }
-      await api.saveProfile(yaml, { base: view.base })
+      await api.saveProfile(yaml, { base: editBase })
       setLost([])
       setMode('view')
       await Promise.all([load(), loadBank(true), loadProfileStatus()])

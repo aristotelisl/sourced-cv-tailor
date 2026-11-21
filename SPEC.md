@@ -135,6 +135,9 @@ Other rules:
 5. **Export**: PDF download, page-count indicator, fit step used.
 6. **Extras**: cover letter, about-me blurb, message drafts.
 7. **Tracker**: table of applications with status, date, and links to CV versions.
+   Every application has its own URL (`#/applications/42`, or `#/applications/42/versions/7` for one CV
+   version), so it can be bookmarked or opened in another tab. Unsaved CV edits are kept per application
+   in the browser until a version is saved.
 8. **Profile page**: your profile laid out like a CV (unverified items and what gap-report answers added are
    marked), "Edit as YAML" with validation (warns if the open CV cites something the edit removes; refused if
    the file changed since the page loaded it), and "Replace from a CV". A form editor per item is still to come.

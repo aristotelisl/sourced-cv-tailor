@@ -28,7 +28,8 @@ claim those entries don't support.
   A4 preview, PDF that tightens its own layout to fit one page.
 - **Extras**: cover letter (as a PDF with the CV header), about-me blurb, recruiter and referral
   messages, checked sentence by sentence with the same no-invention rule.
-- **Tracker**: applications, status, and every CV version you sent (SQLite).
+- **Tracker**: applications, status, and every CV version you sent (SQLite). Each application has
+  its own link, so you can bookmark it or work on two in different tabs.
 - **Bring your own model**: Claude by default, or any OpenAI-compatible API, chosen per step.
 - **Cost logging**: every model call is logged with tokens (and cost, for Claude); see `scripts/usage_report.py`.
 

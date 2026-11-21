@@ -32,31 +32,55 @@ function ErrorAlert() {
   )
 }
 
-function NavLink({ to, current, children }: { to: Route; current: Route; children: string }) {
+type Page = 'tailor' | 'tracker' | 'profile'
+
+function NavLink({ to, page, current, children }: { to: Route; page: Page; current: Page; children: string }) {
   return (
     <a href={href(to)}
-       className={cn('rounded-md px-2 py-1 text-sm', to === current ? 'bg-muted font-medium' : 'text-muted-foreground')}>
+       className={cn('rounded-md px-2 py-1 text-sm', page === current ? 'bg-muted font-medium' : 'text-muted-foreground')}>
       {children}
     </a>
   )
 }
 
+/** Keep the store on the application the URL names: #/applications/42 loads it, #/new clears it. */
+function useApplicationFromUrl(route: Route) {
+  useEffect(() => {
+    const s = useStore.getState()
+    if (route.page === 'application') {
+      if (s.applicationId === route.id && (route.versionId === null || route.versionId === s.versionId)) return
+      void s.openApplication(route.id, route.versionId).then(ok => {
+        if (!ok) navigate({ page: 'new' }, { replace: true }) // e.g. deleted: the error explains
+      })
+    } else if (route.page === 'new' && s.applicationId !== null) {
+      s.startNew()
+    }
+  }, [route])
+}
+
 export default function App() {
-  const { analysis, cv, reset, busy, profile, sampleChosen, error, loadProfileStatus } = useStore()
+  const { analysis, cv, applicationId, versionId, reset, busy, profile, sampleChosen, error, loadProfileStatus } =
+    useStore()
   const route = useRoute()
   useEffect(() => { loadProfileStatus() }, [loadProfileStatus])
+  useApplicationFromUrl(route)
 
   // New users set up their profile first, unless they chose to explore with the sample one.
   const needsSetup = profile !== null &&
     (profile.state === 'missing' || (profile.state === 'example' && !sampleChosen))
-  const page: Route | 'loading' = profile === null && !error ? 'loading' : needsSetup ? 'profile' : route
+  const current: Page = route.page === 'tracker' || route.page === 'profile' ? route.page : 'tailor'
+  // Until the store holds what the URL names, show "Opening…" rather than the previous application or version.
+  const opening = route.page === 'application' &&
+    (applicationId !== route.id || (route.versionId !== null && route.versionId !== versionId))
+  const page: Page | 'loading' = (profile === null && !error) || opening ? 'loading' : needsSetup ? 'profile' : current
   const splitView = page === 'tailor' && analysis !== null
+  // "Tailor" goes back to the application you have open, if any.
+  const tailorRoute: Route = applicationId !== null ? { page: 'application', id: applicationId, versionId } : { page: 'new' }
 
   const newJob = () => {
-    // Saved work is safe in the tracker; only unsaved edits would be lost.
-    if (cv && !window.confirm('Start a new application? Unsaved edits to this CV will be lost (saved versions stay in the tracker).')) return
+    // Saved versions are in the tracker and unsaved edits stay as a draft of their application.
     reset()
-    navigate('tailor')
+    navigate({ page: 'new' })
   }
 
   return (
@@ -64,17 +88,21 @@ export default function App() {
     <div className={cn('min-h-screen bg-muted/40', splitView && 'lg:flex lg:h-screen lg:flex-col')}>
       <header className="flex items-center gap-3 border-b bg-background px-6 py-3">
         <h1 className="mr-4 text-base font-semibold">CV Tailor</h1>
-        <NavLink to="tailor" current={route}>Tailor</NavLink>
-        <NavLink to="tracker" current={route}>Tracker</NavLink>
-        <NavLink to="profile" current={route}>Profile</NavLink>
-        {(analysis || route === 'tracker') && page !== 'profile' && (
+        <NavLink to={tailorRoute} page="tailor" current={current}>Tailor</NavLink>
+        <NavLink to={{ page: 'tracker' }} page="tracker" current={current}>Tracker</NavLink>
+        <NavLink to={{ page: 'profile' }} page="profile" current={current}>Profile</NavLink>
+        {(analysis || current === 'tracker') && page !== 'profile' && (
           <Button size="sm" variant="outline" className="ml-auto" onClick={newJob} disabled={busy !== null}>
             New application
           </Button>
         )}
       </header>
 
-      {page === 'loading' ? null : page === 'profile' ? (
+      {page === 'loading' ? (
+        <main className="mx-auto max-w-3xl p-6 text-sm text-muted-foreground">
+          {opening && busy === 'open' ? 'Opening the application…' : null}
+        </main>
+      ) : page === 'profile' ? (
         <main className="mx-auto max-w-3xl space-y-4 p-6">
           <ProfilePage />
         </main>
@@ -91,7 +119,7 @@ export default function App() {
               <AlertTitle>You're exploring with the sample profile</AlertTitle>
               <AlertDescription>
                 CVs will use {profile.name}'s experience (a fictional person).{' '}
-                <a href={href('profile')} className="font-medium underline">Set up your own profile</a> from your CV.
+                <a href={href({ page: 'profile' })} className="font-medium underline">Set up your own profile</a> from your CV.
               </AlertDescription>
             </Alert>
           )}

@@ -75,7 +75,7 @@ export function ProfileSetup({ onCancel }: { onCancel?: () => void }) {
     try {
       const res = await api.saveProfile(yaml, { backup: true })
       profileReplaced(res.status)
-      navigate('tailor')
+      navigate({ page: 'new' })
     } catch (e) {
       fail(e, 'review')
     }
@@ -83,7 +83,7 @@ export function ProfileSetup({ onCancel }: { onCancel?: () => void }) {
 
   const sample = async () => {
     await chooseSample()
-    navigate('tailor')
+    navigate({ page: 'new' })
   }
 
   const errorAlert = error && (

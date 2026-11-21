@@ -3,10 +3,11 @@ import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import {
   api, STATUSES, type ApplicationDetail, type ApplicationStatus, type ApplicationSummary, type ApplicationUpdate,
 } from '@/api/client'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { navigate } from '@/lib/route'
+import { drafts } from '@/lib/drafts'
+import { href, navigate } from '@/lib/route'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/store'
 
@@ -39,7 +40,6 @@ function StatusSelect({ value, onChange }: { value: ApplicationStatus; onChange:
 
 function Details({ id, onChanged }: { id: number; onChanged: () => void }) {
   const [app, setApp] = useState<ApplicationDetail | null>(null)
-  const openApplication = useStore(s => s.openApplication)
 
   useEffect(() => { api.getApplication(id).then(setApp) }, [id])
   if (!app) return <div className="p-4 text-sm text-muted-foreground">Loading…</div>
@@ -48,9 +48,11 @@ function Details({ id, onChanged }: { id: number; onChanged: () => void }) {
     setApp(await api.updateApplication(id, update))
     onChanged()
   }
-  const open = async (versionId?: number) => {
-    if (await openApplication(id, versionId)) navigate('tailor')
-  }
+  // Links, not buttons: Ctrl+click or middle-click opens the application in a new tab.
+  const openLink = (versionId: number | null, label: string) => (
+    <a className={buttonVariants({ size: 'xs', variant: 'outline' })}
+       href={href({ page: 'application', id, versionId })}>{label}</a>
+  )
 
   return (
     <div className="grid gap-4 p-4 md:grid-cols-2">
@@ -80,7 +82,7 @@ function Details({ id, onChanged }: { id: number; onChanged: () => void }) {
         <div className="text-xs font-medium text-muted-foreground">CV versions</div>
         {app.versions.length === 0 && (
           <div className="text-sm">
-            Not tailored yet. <Button size="xs" variant="outline" onClick={() => open()}>Open job</Button>
+            Not tailored yet. {openLink(null, 'Open job')}
           </div>
         )}
         <ul className="space-y-1">
@@ -91,7 +93,7 @@ function Details({ id, onChanged }: { id: number; onChanged: () => void }) {
                 {v.label}
                 {v.id === app.cv_version_id && <span className="ml-2 text-xs text-emerald-700">sent</span>}
               </span>
-              <Button size="xs" variant="outline" onClick={() => open(v.id)}>Open</Button>
+              {openLink(v.id, 'Open')}
               <a className="text-xs underline" href={api.versionPdfUrl(v.id)} download={`${v.filename}.pdf`}>PDF</a>
             </li>
           ))}
@@ -119,7 +121,11 @@ export function Tracker() {
   const remove = async (a: ApplicationSummary) => {
     if (!window.confirm(`Delete "${a.title}" at ${a.company ?? 'unknown company'} and all its CV versions?`)) return
     await api.deleteApplication(a.id)
-    if (a.id === applicationId) reset()
+    drafts.remove(a.id)
+    if (a.id === applicationId) {
+      reset()
+      navigate({ page: 'tracker' }) // the Tailor link no longer points at it
+    }
     load()
   }
 
