@@ -57,29 +57,29 @@ def item(id, text):
 def good_draft(**changes) -> ImportedProfile:
     draft = ImportedProfile(
         person=ImportedPerson(name="Jordan Avery", location="Porto, Portugal", phone="+44 7700 900123",
-                              email="jordan.avery@example.com", website=None, linkedin=None,
+                              email="jordan.avery@example.com", website="", linkedin="",
                               github="https://github.com/jordan-avery-example",
                               spoken_languages=["Portuguese (Native)", "English (Fluent)"]),
         education=[ImportedEducation(id="northgate_msc", degree="MSc Computer Science",
-                                     institution="Northgate University", location=None, start="2025", end="2026",
-                                     grade="Distinction", dissertation=None,
+                                     institution="Northgate University", location="", start="2025", end="2026",
+                                     grade="Distinction", dissertation="",
                                      modules=["Software Engineering", "AI and Machine Learning"])],
         experience=[
-            ImportedExperience(id="lumora", title="Software Developer", company="Lumora", url=None,
+            ImportedExperience(id="lumora", title="Software Developer", company="Lumora", url="",
                                location="Porto, Portugal", start="10/2024", end="09/2025", is_internship=False,
                                stack=[], bullets=[
                                    item("lumora_agentic_rag", "Designed and implemented agentic AI workflows and "
                                         "RAG pipelines for Lumora's customer-support assistant, using LlamaIndex"),
                                    item("lumora_website", "Built the company website using Next.js")]),
             ImportedExperience(id="kestrel", title="Software Engineering Intern", company="Kestrel Software",
-                               url=None, location="Lisbon", start="07/2023", end="09/2023", is_internship=True,
+                               url="", location="Lisbon", start="07/2023", end="09/2023", is_internship=True,
                                stack=[], bullets=[item("kestrel_visualiser", "Developed a dependency visualiser web "
                                                        "application for a monorepo of 300 packages")]),
         ],
-        projects=[ImportedProject(id="flowboard", name="FlowBoard", context="MSc dissertation", url=None,
-                                  year=None, stack=[], facts=[item("flowboard_overview", "Turns written requirements "
+        projects=[ImportedProject(id="flowboard", name="FlowBoard", context="MSc dissertation", url="",
+                                  year="", stack=[], facts=[item("flowboard_overview", "Turns written requirements "
                                                                    "documents into editable process diagrams")])],
-        awards=[ImportedAward(id="hackathon", name="Northgate Hackathon", institution=None, date="05/2026",
+        awards=[ImportedAward(id="hackathon", name="Northgate Hackathon", institution="", date="05/2026",
                               text="1st place")],
         skills=["Python", "TypeScript", "React", "Next.js", "Docker", "LlamaIndex"],
         questions=[],

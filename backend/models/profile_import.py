@@ -6,6 +6,8 @@ from pydantic import Field
 from backend.models.base import StrictModel
 
 # --- What the model extracts from a CV (structured output) -------------------------------
+# No nullable fields: each one multiplies the grammar the API compiles for structured outputs,
+# and ~20 of them make it refuse the schema ("compiled grammar is too large"). Empty string = not given.
 
 
 class ImportedItem(StrictModel):
@@ -15,12 +17,12 @@ class ImportedItem(StrictModel):
 
 class ImportedPerson(StrictModel):
     name: str
-    location: str | None
-    phone: str | None
-    email: str | None
-    website: str | None
-    linkedin: str | None
-    github: str | None
+    location: str = Field(description="Empty if not in the CV")
+    phone: str = Field(description="Empty if not in the CV")
+    email: str = Field(description="Empty if not in the CV")
+    website: str = Field(description="Empty if not in the CV")
+    linkedin: str = Field(description="Empty if not in the CV")
+    github: str = Field(description="Empty if not in the CV")
     spoken_languages: list[str] = Field(description="As written, e.g. 'Spanish (Native)'")
 
 
@@ -28,11 +30,11 @@ class ImportedEducation(StrictModel):
     id: str = Field(description="snake_case, e.g. leeds_bsc")
     degree: str
     institution: str
-    location: str | None
-    start: str | None = Field(description="MM/YYYY, or YYYY if the CV gives only a year")
-    end: str | None = Field(description="MM/YYYY, YYYY, or 'Present'")
-    grade: str | None
-    dissertation: str | None
+    location: str = Field(description="Empty if not in the CV")
+    start: str = Field(description="Empty if not given. MM/YYYY, or YYYY if the CV gives only a year")
+    end: str = Field(description="Empty if not given. MM/YYYY, YYYY, or 'Present'")
+    grade: str = Field(description="Empty if not in the CV")
+    dissertation: str = Field(description="Empty if not in the CV")
     modules: list[str]
 
 
@@ -40,10 +42,10 @@ class ImportedExperience(StrictModel):
     id: str = Field(description="snake_case company name, e.g. acme")
     title: str
     company: str
-    url: str | None
-    location: str | None
-    start: str | None = Field(description="MM/YYYY, or YYYY if the CV gives only a year")
-    end: str | None = Field(description="MM/YYYY, YYYY, or 'Present'")
+    url: str = Field(description="Empty if not in the CV")
+    location: str = Field(description="Empty if not in the CV")
+    start: str = Field(description="Empty if not given. MM/YYYY, or YYYY if the CV gives only a year")
+    end: str = Field(description="Empty if not given. MM/YYYY, YYYY, or 'Present'")
     is_internship: bool
     stack: list[str] = Field(description="Technologies the CV names for this job outside its bullets")
     bullets: list[ImportedItem]
@@ -52,9 +54,9 @@ class ImportedExperience(StrictModel):
 class ImportedProject(StrictModel):
     id: str
     name: str
-    context: str | None = Field(description="e.g. 'MSc dissertation' or 'Personal project'")
-    url: str | None
-    year: str | None
+    context: str = Field(description="Empty if not given. e.g. 'MSc dissertation' or 'Personal project'")
+    url: str = Field(description="Empty if not in the CV")
+    year: str = Field(description="Empty if not in the CV")
     stack: list[str]
     facts: list[ImportedItem]
 
@@ -62,9 +64,9 @@ class ImportedProject(StrictModel):
 class ImportedAward(StrictModel):
     id: str
     name: str
-    institution: str | None
-    date: str | None
-    text: str | None
+    institution: str = Field(description="Empty if not in the CV")
+    date: str = Field(description="Empty if not in the CV")
+    text: str = Field(description="Empty if not in the CV")
 
 
 class ImportedProfile(StrictModel):

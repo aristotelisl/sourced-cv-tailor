@@ -14,7 +14,7 @@ is built only from this profile, so it must hold exactly what the CV says, nothi
   bullets: fix only line breaks, hyphenation and stray symbols from the PDF. Don't improve, merge,
   shorten or expand them, and don't add any technology, number, scope or outcome.
 - Code checks every value against the CV text and rejects anything it can't find there.
-- Leave a field null (or a list empty) when the CV doesn't say it. Never guess a location, a
+- Leave a field as an empty string (or a list empty) when the CV doesn't say it. Never guess a location, a
   date, a URL or a grade.
 - If something is unclear (e.g. which job a bullet belongs to, an unreadable date, a two-column
   layout that jumbled lines), make your best reading and add a short question to `questions`,
