@@ -79,7 +79,7 @@ Optionally, put your best tailored CV in `data/example.tailored.json` (same shap
 
 ## Choosing a model
 
-Set it in `.env` (all options are in `.env.example`):
+Set it in `.env` (`.env.example` has the three options ready to uncomment):
 
 ```bash
 # Claude (default)
@@ -96,6 +96,17 @@ CV_TAILOR_PROVIDER=openai
 CV_TAILOR_BASE_URL=http://localhost:11434/v1
 CV_TAILOR_MODEL=<a model you have pulled>
 ```
+
+Base URLs for `CV_TAILOR_BASE_URL`:
+
+| Provider | Base URL | Key needed |
+|---|---|---|
+| OpenAI | `https://api.openai.com/v1` | yes |
+| Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | yes |
+| OpenRouter | `https://openrouter.ai/api/v1` | yes |
+| Groq | `https://api.groq.com/openai/v1` | yes |
+| Ollama | `http://localhost:11434/v1` | no |
+| LM Studio | `http://localhost:1234/v1` | no |
 
 `CV_TAILOR_MODEL_<STEP>` picks a model per step (`ANALYSE`, `BULLET`, `ANSWER`, `TAILOR`,
 `EXTRAS`): tailoring and cover letters benefit most from a strong model; job analysis is fine
